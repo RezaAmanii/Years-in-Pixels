@@ -17,9 +17,36 @@ DEFAULT_COLOR = "#aba09f"
 
 USER_DATA_FILENAME = "pixel_data.json"
 
+DAYS_OF_WEEK: dict[int, str] = {
+    1: "Mon",
+    2: "Tue",
+    3: "Wed",
+    4: "Thu",
+    5: "Fri",
+    6: "Sat",
+    7: "Sun",
+}
+MONTHS_OF_YEAR = {
+    1: "Jan",
+    2: "Feb",
+    3: "Mar",
+    4: "Apr",
+    5: "May",
+    6: "Jun",
+    7: "Jul",
+    8: "Aug",
+    9: "Sep",
+    10: "Oct",
+    11: "Nov",
+    12: "Dec",
+}
+
+TOTAL_DAYS_IN_WEEK = 7
+TOTAL_WEEKS_IN_A_YEAR = 53
+
 
 # ===============================================================================================================
-#                                              Helper Function
+#                                               Helper Function
 # ===============================================================================================================
 def load_users_data() -> dict[str, dict[str, str]]:
     if os.path.exists(USER_DATA_FILENAME):
@@ -46,6 +73,9 @@ def update_users_data(user_data: dict[str, dict[str, str]]) -> None:
         print(f"File: {USER_DATA_FILENAME} was not found in your directory.")
 
 
+# ===============================================================================================================
+#                                                 Event Handlers
+# ===============================================================================================================
 def on_mood_select(
     color: str,
     clicked_date: date,
@@ -123,15 +153,28 @@ def main():
     calender_frame = ctk.CTkFrame(app)
     calender_frame.pack(pady=20, padx=20)
 
+    # Create Day Labels in the first column
+    for i in range(TOTAL_DAYS_IN_WEEK):
+        day_label = ctk.CTkLabel(master=calender_frame, text=DAYS_OF_WEEK[i + 1])
+        day_label.grid(row=i + 1, column=0)
+
+    # Start of the year (Year, 1 , 1)
     start_of_year = date(date.today().year, 1, 1)
     days_passed = 0
 
-    for week in range(53):
-        for day in range(7):
+    for week in range(TOTAL_WEEKS_IN_A_YEAR):
+        for day in range(TOTAL_DAYS_IN_WEEK):
             delta = timedelta(days=days_passed)
             current_date = start_of_year + delta
 
             if current_date.year == start_of_year.year:
+                # Check if it start of a month
+                if current_date.day == 1:
+                    month_label = ctk.CTkLabel(
+                        master=calender_frame, text=MONTHS_OF_YEAR[current_date.month]
+                    )
+                    month_label.grid(row=0, column=week + 1)
+
                 # Change to date type to string
                 stringed_date = current_date.strftime("%Y-%m-%d")
 
@@ -154,7 +197,7 @@ def main():
                     ),
                 )
                 pixel_buttons[current_date] = button
-                button.grid(row=day, column=week)
+                button.grid(row=day + 1, column=week + 1)
 
             days_passed += 1
 
