@@ -7,16 +7,17 @@ from typing import Any
 # ===============================================================================================================
 #                                        Global Data and Constants
 # ===============================================================================================================
-DEFAULT_DATA = {
+# Local file file
+USER_DATA_FILENAME: str = "pixel_data.json"
+
+
+# Default data
+DEFAULT_DATA: dict[str, dict[str, str]] = {
     "palette": {"Happy": "#50fa7b", "Tired": "#f1fa8c", "Sad": "#ff5555"},
     "entries": {},
 }
 
-# Dark grey
-DEFAULT_COLOR = "#aba09f"
-
-USER_DATA_FILENAME = "pixel_data.json"
-
+# Days of week
 DAYS_OF_WEEK: dict[int, str] = {
     1: "Mon",
     2: "Tue",
@@ -26,7 +27,9 @@ DAYS_OF_WEEK: dict[int, str] = {
     6: "Sat",
     7: "Sun",
 }
-MONTHS_OF_YEAR = {
+
+# Days of month
+MONTHS_OF_YEAR: dict[int, str] = {
     1: "Jan",
     2: "Feb",
     3: "Mar",
@@ -41,8 +44,17 @@ MONTHS_OF_YEAR = {
     12: "Dec",
 }
 
-TOTAL_DAYS_IN_WEEK = 7
-TOTAL_WEEKS_IN_A_YEAR = 53
+# Colors
+DEFAULT_COLOR: str = "#aba09f"
+
+# Application's visual configuration
+APP_WINDOW_SIZE = "1600x400"
+APP_TITLE = "Year in Pixels"
+APP_FONT = "Helvetica"
+
+# MISC
+TOTAL_DAYS_IN_WEEK: int = 7
+DATE_FORMAT = "%Y-%m-%d"
 
 
 # ===============================================================================================================
@@ -86,7 +98,7 @@ def on_mood_select(
     user_data = load_users_data()
     entries = user_data["entries"]
 
-    stringed_date = clicked_date.strftime("%Y-%m-%d")
+    stringed_date = clicked_date.strftime(DATE_FORMAT)
     entries[stringed_date] = color
     update_users_data(user_data)
 
@@ -138,16 +150,19 @@ def on_pixel_click(
 # ===============================================================================================================
 def main():
     user_data = load_users_data()
+    user_entries = user_data["entries"]
+    color_palette = user_data["palette"]
+
     pixel_buttons = {}
 
     # Create main window
     app = ctk.CTk()
 
     # Set window size
-    app.geometry("1000x400")
+    app.geometry(APP_WINDOW_SIZE)
 
     # Set title
-    app.title("Year in Pixels")
+    app.title(APP_TITLE)
 
     # Create the grid
     calender_frame = ctk.CTkFrame(app)
@@ -155,51 +170,70 @@ def main():
 
     # Create Day Labels in the first column
     for i in range(TOTAL_DAYS_IN_WEEK):
-        day_label = ctk.CTkLabel(master=calender_frame, text=DAYS_OF_WEEK[i + 1])
+        day_label = ctk.CTkLabel(
+            master=calender_frame,
+            text=DAYS_OF_WEEK[i + 1],
+            font=(APP_FONT, 12),
+            text_color="gray",
+            padx=15,
+        )
         day_label.grid(row=i + 1, column=0)
 
     # Start of the year (Year, 1 , 1)
     start_of_year = date(date.today().year, 1, 1)
     days_passed = 0
 
-    for week in range(TOTAL_WEEKS_IN_A_YEAR):
-        for day in range(TOTAL_DAYS_IN_WEEK):
-            delta = timedelta(days=days_passed)
-            current_date = start_of_year + delta
+    month_gap_offset = 0
 
-            if current_date.year == start_of_year.year:
-                # Check if it start of a month
-                if current_date.day == 1:
-                    month_label = ctk.CTkLabel(
-                        master=calender_frame, text=MONTHS_OF_YEAR[current_date.month]
-                    )
-                    month_label.grid(row=0, column=week + 1)
+    for day in range(365):
+        delta = timedelta(days=day)
+        current_date = start_of_year + delta
+        row = current_date.weekday() + 1
 
-                # Change to date type to string
-                stringed_date = current_date.strftime("%Y-%m-%d")
+        # Finding number of week
+        week = int(current_date.strftime("%V"))
 
-                user_entries = user_data["entries"]
-                color = user_entries.get(stringed_date, DEFAULT_COLOR)
-
-                # Color palette
-                color_palette = user_data["palette"]
-
-                button = ctk.CTkButton(
-                    master=calender_frame,
-                    width=15,
-                    height=15,
-                    fg_color=color,
-                    hover_color=color,
-                    border_width=0,
-                    text="",
-                    command=lambda d=current_date: on_pixel_click(
-                        d, color_palette, app, calender_frame, pixel_buttons
-                    ),
+        if current_date.year == start_of_year.year:
+            # Check if it start of a month
+            if current_date.day == 1:
+                month_gap_offset += 3
+                calender_frame.grid_columnconfigure(
+                    week + month_gap_offset - 1, minsize=20
                 )
-                pixel_buttons[current_date] = button
-                button.grid(row=day + 1, column=week + 1)
 
-            days_passed += 1
+                # Month Lables (In the first row)
+                month_label = ctk.CTkLabel(
+                    master=calender_frame,
+                    text=MONTHS_OF_YEAR[current_date.month],
+                    font=(APP_FONT, 14),
+                    text_color="gray",
+                    pady=-15,
+                )
+                month_label.grid(row=0, column=week + month_gap_offset)
+
+            # Change to date type to string
+            stringed_date = current_date.strftime(DATE_FORMAT)
+
+            color = user_entries.get(stringed_date, DEFAULT_COLOR)
+
+            # Squares (days in a year)
+            button = ctk.CTkButton(
+                master=calender_frame,
+                width=15,
+                height=15,
+                fg_color=color,
+                hover_color=color,
+                border_width=0,
+                text="",
+                corner_radius=4,
+                command=lambda d=current_date: on_pixel_click(
+                    d, color_palette, app, calender_frame, pixel_buttons
+                ),
+            )
+            pixel_buttons[current_date] = button
+            button.grid(row=row, column=week + month_gap_offset, padx=2, pady=2)
+
+        days_passed += 1
 
     app.mainloop()
 
