@@ -48,7 +48,7 @@ MONTHS_OF_YEAR: dict[int, str] = {
 DEFAULT_COLOR: str = "#aba09f"
 
 # Application's visual configuration
-APP_WINDOW_SIZE = "1600x400"
+APP_WINDOW_SIZE = "1700x400"
 APP_TITLE = "Year in Pixels"
 APP_FONT = "Helvetica"
 
@@ -175,7 +175,7 @@ def main():
             text=DAYS_OF_WEEK[i + 1],
             font=(APP_FONT, 12),
             text_color="gray",
-            padx=15,
+            padx=5,
         )
         day_label.grid(row=i + 1, column=0)
 
@@ -209,7 +209,9 @@ def main():
                     text_color="gray",
                     pady=-15,
                 )
-                month_label.grid(row=0, column=week + month_gap_offset)
+                month_label.grid(
+                    row=0, column=week + month_gap_offset, columnspan=4, sticky="w"
+                )
 
             # Change to date type to string
             stringed_date = current_date.strftime(DATE_FORMAT)
@@ -219,8 +221,8 @@ def main():
             # Squares (days in a year)
             button = ctk.CTkButton(
                 master=calender_frame,
-                width=15,
-                height=15,
+                width=18,
+                height=18,
                 fg_color=color,
                 hover_color=color,
                 border_width=0,
