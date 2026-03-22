@@ -2,7 +2,6 @@ import os
 import json
 import customtkinter as ctk
 from datetime import date, timedelta
-from typing import Any
 
 # ===============================================================================================================
 #                                        Global Data and Constants
@@ -44,17 +43,17 @@ MONTHS_OF_YEAR: dict[int, str] = {
     12: "Dec",
 }
 
-# Colors
+# Default box colors
 DEFAULT_COLOR: str = "#aba09f"
 
 # Application's visual configuration
-APP_WINDOW_SIZE = "1700x400"
-APP_TITLE = "Year in Pixels"
-APP_FONT = "Helvetica"
+APP_WINDOW_SIZE: str = "1700x400"
+APP_TITLE: str = "Year in Pixels"
+APP_FONT: str = "Helvetica"
 
 # MISC
 TOTAL_DAYS_IN_WEEK: int = 7
-DATE_FORMAT = "%Y-%m-%d"
+DATE_FORMAT: str = "%Y-%m-%d"
 
 
 # ===============================================================================================================
@@ -86,158 +85,149 @@ def update_users_data(user_data: dict[str, dict[str, str]]) -> None:
 
 
 # ===============================================================================================================
-#                                                 Event Handlers
+#                                              Main Classes
 # ===============================================================================================================
-def on_mood_select(
-    color: str,
-    clicked_date: date,
-    calender_frame,
-    pixel_detail_frame,
-    pixel_buttons: dict[date, Any],
-) -> None:
-    user_data = load_users_data()
-    entries = user_data["entries"]
+class YearInPixelApp:
+    def __init__(self):
+        self.app = ctk.CTk()
+        self.app.geometry(APP_WINDOW_SIZE)
+        self.app.title(APP_TITLE)
 
-    stringed_date = clicked_date.strftime(DATE_FORMAT)
-    entries[stringed_date] = color
-    update_users_data(user_data)
+        self.user_data = load_users_data()
+        self.user_entries = self.user_data["entries"]
+        self.color_palette = self.user_data["palette"]
+        self.pixel_buttons = {}
 
-    pixel_detail_frame.destroy()
-    calender_frame.pack()
+    def create_calender(self):
+        self.calender_frame = ctk.CTkFrame(self.app)
+        self.calender_frame.pack(pady=20, padx=20)
 
-    current_button = pixel_buttons[clicked_date]
-    current_button.configure(
-        fg_color=entries[stringed_date], hover_color=entries[stringed_date]
-    )
+        # Create Day Labels in the first column
+        self.create_day_labels()
 
+        # Create the grid pixel
+        self.create_pixel_grid()
 
-def on_pixel_click(
-    clicked_date: date,
-    color_palette: dict[str, str],
-    app,
-    calender_frame,
-    pixel_buttons: dict[date, Any],
-) -> None:
-    print(f"You cliked on: [{clicked_date}]")
+    def create_pixel_grid(self):
+        start_of_year = date(date.today().year, 1, 1)
+        start_of_next_year = date(date.today().year + 1, 1, 1)
+        delta = start_of_next_year - start_of_year
+        days = delta.days
 
-    calender_frame.pack_forget()
+        month_gap_offset = 0
+        days_passed = 0
 
-    pixel_detail_frame = ctk.CTkFrame(master=app)
-    pixel_detail_frame.pack(pady=20, padx=20)
+        for day in range(days):
+            delta = timedelta(days=day)
+            current_date = start_of_year + delta
+            row = current_date.weekday() + 1
+            stringed_date = current_date.strftime(DATE_FORMAT)
 
-    stringed_date = clicked_date.strftime("%Y-%m-%d")
-    title = ctk.CTkLabel(master=pixel_detail_frame, text=stringed_date)
-    title.pack()
+            # Finding number of week
+            week = int(current_date.strftime("%V"))
 
-    for mood, color in color_palette.items():
-        mood_button = ctk.CTkButton(
-            master=pixel_detail_frame,
-            width=15,
-            height=15,
-            fg_color=color,
-            hover_color=color,
-            border_width=0,
-            text=mood,
-            command=lambda d=color: on_mood_select(
-                d, clicked_date, calender_frame, pixel_detail_frame, pixel_buttons
-            ),
+            # Check if we are in the same year as current year
+            if current_date.year == start_of_year.year:
+                # Check if it is start of month
+                if current_date.day == 1:
+                    month_gap_offset += 3
+                    self.calender_frame.grid_columnconfigure(
+                        week + month_gap_offset - 1, minsize=20
+                    )
+
+                    # Month Lables (In the first row)
+                    self.create_month_labels(current_date, week, month_gap_offset)
+
+                color = self.user_entries.get(stringed_date, DEFAULT_COLOR)
+
+                # Squares (days in a year)
+                button = ctk.CTkButton(
+                    master=self.calender_frame,
+                    width=18,
+                    height=18,
+                    fg_color=color,
+                    hover_color=color,
+                    border_width=0,
+                    text="",
+                    corner_radius=4,
+                    command=lambda d=current_date: self.on_pixel_click(d),
+                )
+                self.pixel_buttons[current_date] = button
+                button.grid(row=row, column=week + month_gap_offset, padx=2, pady=2)
+
+            days_passed += 1
+
+    def create_day_labels(self):
+        for i in range(TOTAL_DAYS_IN_WEEK):
+            day_label = ctk.CTkLabel(
+                master=self.calender_frame,
+                text=DAYS_OF_WEEK[i + 1],
+                font=(APP_FONT, 12),
+                text_color="gray",
+                padx=5,
+            )
+            day_label.grid(row=i + 1, column=0)
+
+    def create_month_labels(self, current_date: date, week, month_gap_offset):
+        month_label = ctk.CTkLabel(
+            master=self.calender_frame,
+            text=MONTHS_OF_YEAR[current_date.month],
+            font=(APP_FONT, 14),
+            text_color="gray",
+            pady=-15,
         )
-        mood_button.pack()
+        month_label.grid(
+            row=0, column=week + month_gap_offset, columnspan=4, sticky="w"
+        )
+
+    def on_pixel_click(self, clicked_date: date):
+        self.calender_frame.pack_forget()
+
+        self.pixel_detail_frame = ctk.CTkFrame(master=self.app)
+        self.pixel_detail_frame.pack(pady=20, padx=20)
+
+        stringed_date = clicked_date.strftime("%Y-%m-%d")
+        title = ctk.CTkLabel(master=self.pixel_detail_frame, text=stringed_date)
+        title.pack()
+
+        for mood, color in self.color_palette.items():
+            mood_button = ctk.CTkButton(
+                master=self.pixel_detail_frame,
+                width=15,
+                height=15,
+                fg_color=color,
+                hover_color=color,
+                border_width=0,
+                text=mood,
+                command=lambda d=color: self.on_mood_select(d, clicked_date),
+            )
+            mood_button.pack()
+
+    def on_mood_select(self, color: str, clicked_date: date):
+        stringed_date = clicked_date.strftime(DATE_FORMAT)
+        self.user_entries[stringed_date] = color
+        update_users_data(self.user_data)
+
+        self.pixel_detail_frame.destroy()
+        self.calender_frame.pack()
+
+        current_button = self.pixel_buttons[clicked_date]
+        current_button.configure(
+            fg_color=self.user_entries[stringed_date],
+            hover_color=self.user_entries[stringed_date],
+        )
+
+    def run(self):
+        self.create_calender()
+        self.app.mainloop()
 
 
 # ===============================================================================================================
 #                                              Main Function
 # ===============================================================================================================
 def main():
-    user_data = load_users_data()
-    user_entries = user_data["entries"]
-    color_palette = user_data["palette"]
-
-    pixel_buttons = {}
-
-    # Create main window
-    app = ctk.CTk()
-
-    # Set window size
-    app.geometry(APP_WINDOW_SIZE)
-
-    # Set title
-    app.title(APP_TITLE)
-
-    # Create the grid
-    calender_frame = ctk.CTkFrame(app)
-    calender_frame.pack(pady=20, padx=20)
-
-    # Create Day Labels in the first column
-    for i in range(TOTAL_DAYS_IN_WEEK):
-        day_label = ctk.CTkLabel(
-            master=calender_frame,
-            text=DAYS_OF_WEEK[i + 1],
-            font=(APP_FONT, 12),
-            text_color="gray",
-            padx=5,
-        )
-        day_label.grid(row=i + 1, column=0)
-
-    # Start of the year (Year, 1 , 1)
-    start_of_year = date(date.today().year, 1, 1)
-    days_passed = 0
-
-    month_gap_offset = 0
-
-    for day in range(365):
-        delta = timedelta(days=day)
-        current_date = start_of_year + delta
-        row = current_date.weekday() + 1
-
-        # Finding number of week
-        week = int(current_date.strftime("%V"))
-
-        if current_date.year == start_of_year.year:
-            # Check if it start of a month
-            if current_date.day == 1:
-                month_gap_offset += 3
-                calender_frame.grid_columnconfigure(
-                    week + month_gap_offset - 1, minsize=20
-                )
-
-                # Month Lables (In the first row)
-                month_label = ctk.CTkLabel(
-                    master=calender_frame,
-                    text=MONTHS_OF_YEAR[current_date.month],
-                    font=(APP_FONT, 14),
-                    text_color="gray",
-                    pady=-15,
-                )
-                month_label.grid(
-                    row=0, column=week + month_gap_offset, columnspan=4, sticky="w"
-                )
-
-            # Change to date type to string
-            stringed_date = current_date.strftime(DATE_FORMAT)
-
-            color = user_entries.get(stringed_date, DEFAULT_COLOR)
-
-            # Squares (days in a year)
-            button = ctk.CTkButton(
-                master=calender_frame,
-                width=18,
-                height=18,
-                fg_color=color,
-                hover_color=color,
-                border_width=0,
-                text="",
-                corner_radius=4,
-                command=lambda d=current_date: on_pixel_click(
-                    d, color_palette, app, calender_frame, pixel_buttons
-                ),
-            )
-            pixel_buttons[current_date] = button
-            button.grid(row=row, column=week + month_gap_offset, padx=2, pady=2)
-
-        days_passed += 1
-
-    app.mainloop()
+    app = YearInPixelApp()
+    app.run()
 
 
 # ===============================================================================================================
