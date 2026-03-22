@@ -47,7 +47,7 @@ MONTHS_OF_YEAR: dict[int, str] = {
 DEFAULT_COLOR: str = "#aba09f"
 
 # Application's visual configuration
-APP_WINDOW_SIZE: str = "1700x400"
+APP_WINDOW_SIZE: str = "1700x280"
 APP_TITLE: str = "Year in Pixels"
 APP_FONT: str = "Helvetica"
 
@@ -102,7 +102,9 @@ class YearInPixelApp:
         self.color_palette = self.user_data["palette"]
         self.pixel_buttons = {}
 
-        self.pixel_detail_frame = ctk.CTkFrame(master=self.app)
+        self.pixel_detail_frame = ctk.CTkFrame(
+            master=self.app, border_width=2, border_color="gray", corner_radius=10
+        )
 
     def create_calender(self):
         self.calender_frame = ctk.CTkFrame(self.app)
@@ -190,16 +192,72 @@ class YearInPixelApp:
         for child in self.pixel_detail_frame.winfo_children():
             child.destroy()
 
-        self.calender_frame.pack_forget()
-        self.pixel_detail_frame.pack(pady=20, padx=20)
-
         stringed_date = string_the_date(clicked_date)
-        title = ctk.CTkLabel(master=self.pixel_detail_frame, text=stringed_date)
-        title.pack()
 
-        for mood, color in self.color_palette.items():
+        left_container = ctk.CTkFrame(
+            master=self.pixel_detail_frame, fg_color="transparent"
+        )
+
+        right_container = ctk.CTkFrame(
+            master=self.pixel_detail_frame, fg_color="transparent"
+        )
+        right_container.grid(row=0, column=1, padx=20, sticky="nw")
+
+        ## Left container
+        # Back button
+        back_button = ctk.CTkButton(
+            master=left_container,
+            text="Back",
+            fg_color="blue",
+            command=lambda: self.go_back(),
+            height=20,
+            width=30,
+        )
+        back_button.pack()
+
+        # Pixel Preview
+        current_color = self.user_entries.get(stringed_date, DEFAULT_COLOR)
+        pixel_preview = ctk.CTkFrame(
+            master=left_container,
+            width=150,
+            height=150,
+            fg_color=current_color,
+            corner_radius=10,
+        )
+        pixel_preview.pack(pady=10)
+
+        # Clear button
+        clear_button = ctk.CTkButton(
+            master=left_container,
+            text="Clear",
+            fg_color="red",
+            command=lambda: self.clear_mood(clicked_date),
+            height=20,
+            width=30,
+        )
+        clear_button.pack(padx=(10, 0))
+
+        left_container.grid(row=0, column=0, padx=20, sticky="n")
+
+        ## Right container
+        mood_grid_frame = ctk.CTkFrame(master=right_container, fg_color="transparent")
+
+        # Title (Currently shows the date)
+        title = ctk.CTkLabel(
+            master=right_container,
+            text=stringed_date,
+            font=(APP_FONT, 18, "bold"),
+        )
+        title.pack(pady=10)
+
+        # Separator
+        separator = ctk.CTkFrame(master=right_container, height=2, fg_color="gray")
+        separator.pack(fill="x", padx=10, pady=10)
+
+        # Mood buttons
+        for i, (mood, color) in enumerate(self.color_palette.items()):
             mood_button = ctk.CTkButton(
-                master=self.pixel_detail_frame,
+                master=mood_grid_frame,
                 width=15,
                 height=15,
                 fg_color=color,
@@ -208,21 +266,12 @@ class YearInPixelApp:
                 text=mood,
                 command=lambda d=color: self.on_mood_select(d, clicked_date),
             )
-            mood_button.pack()
+            mood_button.grid(row=0, column=i, padx=5, pady=5)
 
-        # Back button
-        back_button = ctk.CTkButton(
-            master=self.pixel_detail_frame, text="Back", command=lambda: self.go_back()
-        )
-        back_button.pack()
+        mood_grid_frame.pack(pady=10)
 
-        # Clear button
-        clear_button = ctk.CTkButton(
-            master=self.pixel_detail_frame,
-            text="Clear",
-            command=lambda: self.clear_mood(clicked_date),
-        )
-        clear_button.pack()
+        self.calender_frame.pack_forget()
+        self.pixel_detail_frame.pack(pady=20, padx=20)
 
     def go_back(self):
         self.pixel_detail_frame.pack_forget()
@@ -233,6 +282,7 @@ class YearInPixelApp:
         self.user_entries.pop(stringed_date, None)
         update_users_data(self.user_data)
         self.reset_buttons_color(clicked_date)
+        self.on_pixel_click(clicked_date)
 
     def on_mood_select(self, color: str, clicked_date: date):
         stringed_date = string_the_date(clicked_date)
