@@ -84,6 +84,10 @@ def update_users_data(user_data: dict[str, dict[str, str]]) -> None:
         print(f"File: {USER_DATA_FILENAME} was not found in your directory.")
 
 
+def string_the_date(given_date: date) -> str:
+    return given_date.strftime(DATE_FORMAT)
+
+
 # ===============================================================================================================
 #                                              Main Classes
 # ===============================================================================================================
@@ -97,6 +101,8 @@ class YearInPixelApp:
         self.user_entries = self.user_data["entries"]
         self.color_palette = self.user_data["palette"]
         self.pixel_buttons = {}
+
+        self.pixel_detail_frame = ctk.CTkFrame(master=self.app)
 
     def create_calender(self):
         self.calender_frame = ctk.CTkFrame(self.app)
@@ -121,7 +127,7 @@ class YearInPixelApp:
             delta = timedelta(days=day)
             current_date = start_of_year + delta
             row = current_date.weekday() + 1
-            stringed_date = current_date.strftime(DATE_FORMAT)
+            stringed_date = string_the_date(current_date)
 
             # Finding number of week
             week = int(current_date.strftime("%V"))
@@ -181,12 +187,13 @@ class YearInPixelApp:
         )
 
     def on_pixel_click(self, clicked_date: date):
-        self.calender_frame.pack_forget()
+        for child in self.pixel_detail_frame.winfo_children():
+            child.destroy()
 
-        self.pixel_detail_frame = ctk.CTkFrame(master=self.app)
+        self.calender_frame.pack_forget()
         self.pixel_detail_frame.pack(pady=20, padx=20)
 
-        stringed_date = clicked_date.strftime("%Y-%m-%d")
+        stringed_date = string_the_date(clicked_date)
         title = ctk.CTkLabel(master=self.pixel_detail_frame, text=stringed_date)
         title.pack()
 
@@ -203,19 +210,46 @@ class YearInPixelApp:
             )
             mood_button.pack()
 
+        # Back button
+        back_button = ctk.CTkButton(
+            master=self.pixel_detail_frame, text="Back", command=lambda: self.go_back()
+        )
+        back_button.pack()
+
+        # Clear button
+        clear_button = ctk.CTkButton(
+            master=self.pixel_detail_frame,
+            text="Clear",
+            command=lambda: self.clear_mood(clicked_date),
+        )
+        clear_button.pack()
+
+    def go_back(self):
+        self.pixel_detail_frame.pack_forget()
+        self.calender_frame.pack(padx=20, pady=20)
+
+    def clear_mood(self, clicked_date: date):
+        stringed_date = string_the_date(clicked_date)
+        self.user_entries.pop(stringed_date, None)
+        update_users_data(self.user_data)
+        self.reset_buttons_color(clicked_date)
+
     def on_mood_select(self, color: str, clicked_date: date):
-        stringed_date = clicked_date.strftime(DATE_FORMAT)
+        stringed_date = string_the_date(clicked_date)
         self.user_entries[stringed_date] = color
         update_users_data(self.user_data)
-
-        self.pixel_detail_frame.destroy()
-        self.calender_frame.pack()
 
         current_button = self.pixel_buttons[clicked_date]
         current_button.configure(
             fg_color=self.user_entries[stringed_date],
             hover_color=self.user_entries[stringed_date],
         )
+
+        self.go_back()
+
+    def reset_buttons_color(self, clicked_date: date):
+        button = self.pixel_buttons[clicked_date]
+        button.configure(fg_color=DEFAULT_COLOR, hover_color=DEFAULT_COLOR)
 
     def run(self):
         self.create_calender()
