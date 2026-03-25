@@ -1,5 +1,6 @@
 import os
 import json
+from PIL import Image
 import customtkinter as ctk
 from datetime import date, timedelta
 
@@ -27,13 +28,17 @@ MONTHS_OF_YEAR: dict[int, str] = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
 
 
 # Default colors
-DEFAULT_COLOR: str = "#aba09f"
+DEFAULT_BOX_COLOR: str = "#cccccc"
+DEFAULT_BACKGROUND_DARK = "#23272a"
+DEFAULT_MONTH_LABEL_FONT_COLOR = "#7289da"
+DEFAULT_DAY_LABEL_FONT_COLOR = "#99aab5"
+DEFAULT_HOVER_PIXEL_COLOR = "#999999"
 
 
 # Application's visual configuration
-APP_WINDOW_SIZE: str = "1700x280"
+APP_WINDOW_SIZE: str = "1600x280"
 APP_TITLE: str = "Year in Pixels"
-APP_FONT: str = "Helvetica"
+APP_FONT: str = "Source Serif 4"
 
 
 # MISC
@@ -81,23 +86,34 @@ class YearInPixelApp:
         self.app = ctk.CTk()
         self.app.geometry(APP_WINDOW_SIZE)
         self.app.title(APP_TITLE)
-
+        self.app.resizable(False, False)
         self.user_data = load_users_data()
         self.user_entries = self.user_data["entries"]
         self.color_palette = self.user_data["palette"]
         self.pixel_buttons = {}
 
-        self.pixel_detail_frame = ctk.CTkFrame(
-                    master=self.app,
-                    border_width=2,
-                    border_color="gray",
-                    corner_radius=10
-                    )
+
+        # Loading icons for the buttons
+        self.icon_back = ctk.CTkImage(
+            light_image=Image.open("Icons/back_button_light.png"),
+            dark_image=Image.open("Icons/back_button_dark.png"),
+            size=(30, 30)
+        )
+
+        self.icon_clear = ctk.CTkImage(
+            light_image=Image.open("Icons/clear.png"),
+            dark_image=Image.open("Icons/clear.png"),
+            size=(30,30)
+
+        )
+
+
+        self.pixel_detail_frame = ctk.CTkFrame(master=self.app)
 
 
     def create_calender(self):
-        self.calender_frame = ctk.CTkFrame(self.app)
-        self.calender_frame.pack(pady=20, padx=20)
+        self.calender_frame = ctk.CTkFrame(self.app, fg_color=DEFAULT_BACKGROUND_DARK)
+        self.calender_frame.pack(fill="both", expand=True)
 
         # Create Day Labels in the first column
         self.create_day_labels()
@@ -110,7 +126,7 @@ class YearInPixelApp:
         start_of_year = date(date.today().year, 1, 1)
         start_of_next_year = date(date.today().year + 1, 1, 1)
         delta = start_of_next_year - start_of_year
-        days = delta.days
+        days = (start_of_next_year - start_of_year).days
 
         month_gap_offset = 0
         days_passed = 0
@@ -136,18 +152,18 @@ class YearInPixelApp:
                     # Month Lables (In the first row)
                     self.create_month_labels(current_date, week, month_gap_offset)
 
-                color = self.user_entries.get(stringed_date, DEFAULT_COLOR)
+                color = self.user_entries.get(stringed_date, DEFAULT_BOX_COLOR)
 
                 # Squares (days in a year)
                 button = ctk.CTkButton(
                     master=self.calender_frame,
-                    width=18,
-                    height=18,
+                    width=16,
+                    height=16,
                     fg_color=color,
-                    hover_color=color,
+                    hover_color=DEFAULT_HOVER_PIXEL_COLOR,
                     border_width=0,
                     text="",
-                    corner_radius=4,
+                    corner_radius=2,
                     command=lambda d=current_date: self.on_pixel_click(d),
                 )
                 self.pixel_buttons[current_date] = button
@@ -161,9 +177,9 @@ class YearInPixelApp:
             day_label = ctk.CTkLabel(
                 master=self.calender_frame,
                 text=DAYS_OF_WEEK[i + 1],
-                font=(APP_FONT, 12),
-                text_color="gray",
-                padx=5,
+                font=(APP_FONT, 13, "bold"),
+                text_color=DEFAULT_DAY_LABEL_FONT_COLOR,
+                padx=10,
             )
             day_label.grid(row=i + 1, column=0)
 
@@ -172,104 +188,100 @@ class YearInPixelApp:
         month_label = ctk.CTkLabel(
             master=self.calender_frame,
             text=MONTHS_OF_YEAR[current_date.month],
-            font=(APP_FONT, 14),
-            text_color="gray",
-            pady=-15,
+            font=(APP_FONT, 15, "bold"),
+            text_color=DEFAULT_MONTH_LABEL_FONT_COLOR,
+            pady=5,
         )
         month_label.grid(
             row=0, column=week + month_gap_offset, columnspan=4, sticky="w"
         )
-
-
     def on_pixel_click(self, clicked_date: date):
         for child in self.pixel_detail_frame.winfo_children():
             child.destroy()
 
         stringed_date = string_the_date(clicked_date)
 
-        left_container = ctk.CTkFrame(
-            master=self.pixel_detail_frame, fg_color="transparent"
+        # Card" frame to hold everything
+        card_frame = ctk.CTkFrame(
+            master=self.pixel_detail_frame,
+            fg_color="#333333",
+            corner_radius=15,
+            border_width=1,
+            border_color="#444444"
         )
+ 
+        card_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-        right_container = ctk.CTkFrame(
-            master=self.pixel_detail_frame, fg_color="transparent"
-        )
-        right_container.grid(row=0, column=1, padx=20, sticky="nw")
+        # Back Button & Title
+        header_frame = ctk.CTkFrame(card_frame, fg_color="transparent")
+        header_frame.pack(fill="x", padx=20, pady=(20, 10))
 
-        ## Left container
-        # Back button
         back_button = ctk.CTkButton(
-            master=left_container,
-            text="Back",
-            fg_color="blue",
-            command=lambda: self.go_back(),
-            height=20,
+            master=header_frame,
+            text="",
+            image=self.icon_back,
+            fg_color="transparent",
+            hover_color="#444444",
+            command=self.go_back,
             width=30,
         )
-        back_button.pack()
+        back_button.pack(side="left")
 
-        # Pixel Preview
-        current_color = self.user_entries.get(stringed_date, DEFAULT_COLOR)
-        pixel_preview = ctk.CTkFrame(
-            master=left_container,
-            width=150,
-            height=150,
-            fg_color=current_color,
-            corner_radius=10,
-        )
-        pixel_preview.pack(pady=10)
-
-        # Clear button
-        clear_button = ctk.CTkButton(
-            master=left_container,
-            text="Clear",
-            fg_color="red",
-            command=lambda: self.clear_mood(clicked_date),
-            height=20,
-            width=30,
-        )
-        clear_button.pack(padx=(10, 0))
-
-        left_container.grid(row=0, column=0, padx=20, sticky="n")
-
-        ## Right container
-        mood_grid_frame = ctk.CTkFrame(master=right_container, fg_color="transparent")
-
-        # Title (Currently shows the date)
         title = ctk.CTkLabel(
-            master=right_container,
+            master=header_frame,
             text=stringed_date,
-            font=(APP_FONT, 18, "bold"),
+            font=(APP_FONT, 20, "bold"),
+            text_color="white"
         )
-        title.pack(pady=10)
+        title.pack(side="left", padx=20)
 
-        # Separator
-        separator = ctk.CTkFrame(master=right_container, height=2, fg_color="gray")
-        separator.pack(fill="x", padx=10, pady=10)
+        clear_button = ctk.CTkButton(
+            master=header_frame,
+            text="",
+            image=self.icon_clear,
+            fg_color="transparent",
+            hover_color="#ff4c4c",
+            command=lambda: self.clear_mood(clicked_date),
+            width=30,
+        )
+        clear_button.pack(side="right")
 
-        # Mood buttons
+        # The Pixel Preview
+        current_color = self.user_entries.get(stringed_date, DEFAULT_BOX_COLOR)
+        self.pixel_preview = ctk.CTkFrame(
+            master=card_frame,
+            width=120,
+            height=120,
+            fg_color=current_color,
+            corner_radius=15,
+        )
+        self.pixel_preview.pack(pady=10, padx=40)
+
+        # Mood Buttons
+        mood_grid_frame = ctk.CTkFrame(master=card_frame, fg_color="transparent")
+        mood_grid_frame.pack(pady=(10, 20))
+
         for i, (mood, color) in enumerate(self.color_palette.items()):
             mood_button = ctk.CTkButton(
                 master=mood_grid_frame,
-                width=15,
-                height=15,
+                width=60,
+                height=30,
                 fg_color=color,
                 hover_color=color,
-                border_width=0,
                 text=mood,
+                text_color="black",
+                font=(APP_FONT, 12, "bold"),
+                corner_radius=20, 
                 command=lambda d=color: self.on_mood_select(d, clicked_date),
             )
-            mood_button.grid(row=0, column=i, padx=5, pady=5)
-
-        mood_grid_frame.pack(pady=10)
+            mood_button.grid(row=0, column=i, padx=5)
 
         self.calender_frame.pack_forget()
-        self.pixel_detail_frame.pack(pady=20, padx=20)
-
+        self.pixel_detail_frame.pack(expand=True, fill="both")
 
     def go_back(self):
         self.pixel_detail_frame.pack_forget()
-        self.calender_frame.pack(padx=20, pady=20)
+        self.calender_frame.pack(fill="both", expand=True)
 
 
     def clear_mood(self, clicked_date: date):
@@ -287,16 +299,17 @@ class YearInPixelApp:
 
         current_button = self.pixel_buttons[clicked_date]
         current_button.configure(
-            fg_color=self.user_entries[stringed_date],
-            hover_color=self.user_entries[stringed_date],
+            fg_color=color,
+            hover_color=color,
         )
 
-        self.go_back()
+        if hasattr(self, 'pixel_preview'):
+            self.pixel_preview.configure(fg_color=color)
 
 
     def reset_buttons_color(self, clicked_date: date):
         button = self.pixel_buttons[clicked_date]
-        button.configure(fg_color=DEFAULT_COLOR, hover_color=DEFAULT_COLOR)
+        button.configure(fg_color=DEFAULT_BOX_COLOR, hover_color=DEFAULT_BOX_COLOR)
 
 
     def run(self):
