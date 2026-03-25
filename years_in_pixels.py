@@ -13,43 +13,28 @@ USER_DATA_FILENAME: str = "pixel_data.json"
 # Default data
 DEFAULT_DATA: dict[str, dict[str, str]] = {
     "palette": {"Happy": "#50fa7b", "Tired": "#f1fa8c", "Sad": "#ff5555"},
-    "entries": {},
-}
+    "entries": {}}
+
 
 # Days of week
-DAYS_OF_WEEK: dict[int, str] = {
-    1: "Mon",
-    2: "Tue",
-    3: "Wed",
-    4: "Thu",
-    5: "Fri",
-    6: "Sat",
-    7: "Sun",
-}
+DAYS_OF_WEEK: dict[int, str] = {1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat", 7: "Sun"}
 
-# Days of month
-MONTHS_OF_YEAR: dict[int, str] = {
-    1: "Jan",
-    2: "Feb",
-    3: "Mar",
-    4: "Apr",
-    5: "May",
-    6: "Jun",
-    7: "Jul",
-    8: "Aug",
-    9: "Sep",
-    10: "Oct",
-    11: "Nov",
-    12: "Dec",
-}
 
-# Default box colors
+# Month of year
+MONTHS_OF_YEAR: dict[int, str] = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
+                                  5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
+                                  9: "Sep", 10: "Oct", 11: "Nov",12: "Dec"}
+
+
+# Default colors
 DEFAULT_COLOR: str = "#aba09f"
+
 
 # Application's visual configuration
 APP_WINDOW_SIZE: str = "1700x280"
 APP_TITLE: str = "Year in Pixels"
 APP_FONT: str = "Helvetica"
+
 
 # MISC
 TOTAL_DAYS_IN_WEEK: int = 7
@@ -103,8 +88,12 @@ class YearInPixelApp:
         self.pixel_buttons = {}
 
         self.pixel_detail_frame = ctk.CTkFrame(
-            master=self.app, border_width=2, border_color="gray", corner_radius=10
-        )
+                    master=self.app,
+                    border_width=2,
+                    border_color="gray",
+                    corner_radius=10
+                    )
+
 
     def create_calender(self):
         self.calender_frame = ctk.CTkFrame(self.app)
@@ -115,6 +104,7 @@ class YearInPixelApp:
 
         # Create the grid pixel
         self.create_pixel_grid()
+
 
     def create_pixel_grid(self):
         start_of_year = date(date.today().year, 1, 1)
@@ -165,6 +155,7 @@ class YearInPixelApp:
 
             days_passed += 1
 
+
     def create_day_labels(self):
         for i in range(TOTAL_DAYS_IN_WEEK):
             day_label = ctk.CTkLabel(
@@ -175,6 +166,7 @@ class YearInPixelApp:
                 padx=5,
             )
             day_label.grid(row=i + 1, column=0)
+
 
     def create_month_labels(self, current_date: date, week, month_gap_offset):
         month_label = ctk.CTkLabel(
@@ -187,6 +179,7 @@ class YearInPixelApp:
         month_label.grid(
             row=0, column=week + month_gap_offset, columnspan=4, sticky="w"
         )
+
 
     def on_pixel_click(self, clicked_date: date):
         for child in self.pixel_detail_frame.winfo_children():
@@ -273,9 +266,11 @@ class YearInPixelApp:
         self.calender_frame.pack_forget()
         self.pixel_detail_frame.pack(pady=20, padx=20)
 
+
     def go_back(self):
         self.pixel_detail_frame.pack_forget()
         self.calender_frame.pack(padx=20, pady=20)
+
 
     def clear_mood(self, clicked_date: date):
         stringed_date = string_the_date(clicked_date)
@@ -283,6 +278,7 @@ class YearInPixelApp:
         update_users_data(self.user_data)
         self.reset_buttons_color(clicked_date)
         self.on_pixel_click(clicked_date)
+
 
     def on_mood_select(self, color: str, clicked_date: date):
         stringed_date = string_the_date(clicked_date)
@@ -297,9 +293,11 @@ class YearInPixelApp:
 
         self.go_back()
 
+
     def reset_buttons_color(self, clicked_date: date):
         button = self.pixel_buttons[clicked_date]
         button.configure(fg_color=DEFAULT_COLOR, hover_color=DEFAULT_COLOR)
+
 
     def run(self):
         self.create_calender()
