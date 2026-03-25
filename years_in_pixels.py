@@ -2,7 +2,10 @@ import os
 import json
 from PIL import Image
 import customtkinter as ctk
+from tkinter.colorchooser import askcolor
 from datetime import date, timedelta
+
+from customtkinter.windows.widgets import core_rendering
 
 # ===============================================================================================================
 #                                        Global Data and Constants
@@ -264,17 +267,31 @@ class YearInPixelApp:
         for i, (mood, color) in enumerate(self.color_palette.items()):
             mood_button = ctk.CTkButton(
                 master=mood_grid_frame,
-                width=60,
+                width=80,
                 height=30,
                 fg_color=color,
                 hover_color=color,
                 text=mood,
                 text_color="black",
                 font=(APP_FONT, 12, "bold"),
-                corner_radius=20, 
+                corner_radius=20,
                 command=lambda d=color: self.on_mood_select(d, clicked_date),
             )
             mood_button.grid(row=0, column=i, padx=5)
+
+        add_mood_btn = ctk.CTkButton(
+            master=mood_grid_frame,
+            width=30,
+            height=30,
+            fg_color="#555555",
+            hover_color="#777777",
+            text="+",
+            font=(APP_FONT, 16, "bold"),
+            corner_radius=20,
+            command=lambda: self.add_new_mood(clicked_date)
+        )
+
+        add_mood_btn.grid(row=0, column=len(self.color_palette), padx=5)
 
         self.calender_frame.pack_forget()
         self.pixel_detail_frame.pack(expand=True, fill="both")
@@ -310,6 +327,24 @@ class YearInPixelApp:
     def reset_buttons_color(self, clicked_date: date):
         button = self.pixel_buttons[clicked_date]
         button.configure(fg_color=DEFAULT_BOX_COLOR, hover_color=DEFAULT_BOX_COLOR)
+
+
+    def add_new_mood(self, clicked_date: date):
+        dialog = ctk.CTkInputDialog(
+            text="Enter the name of your new mood:",
+            title="Add Custom Mood"
+        )
+        mood_name = dialog.get_input()
+
+        if mood_name and mood_name.strip() != "":
+            chosen_color = askcolor(title=f"Choose a color for '{mood_name}'")
+            hex_color = chosen_color[1]
+
+            if hex_color:
+                self.color_palette[mood_name] = hex_color
+                update_users_data(self.user_data)
+
+                self.on_pixel_click(clicked_date)
 
 
     def run(self):
