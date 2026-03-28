@@ -39,7 +39,7 @@ class DetailView(ctk.CTkFrame):
             fg_color="transparent",
             hover_color="#444444",
             command=self.on_back_callback,
-            width= 20, height=20
+            width= 30, height=30
         )
         back_button.pack(side="left")
 
@@ -48,10 +48,10 @@ class DetailView(ctk.CTkFrame):
         title = ctk.CTkLabel(
             master=header_frame,
             text=self.stringed_date,
-            font=(config.APP_FONT, 20, "bold"),
+            font=(config.APP_FONT, 30, "bold"),
             text_color="white"
         )
-        title.pack(side="left", padx=20)
+        title.pack(side="left", padx=30)
 
 
         # Clear button
@@ -76,9 +76,9 @@ class DetailView(ctk.CTkFrame):
         current_color = self.user_entries.get(self.stringed_date, config.DEFAULT_BOX_COLOR)
         self.pixel_preview = ctk.CTkFrame(
             master=content_frame,
-            width= 120, height=120,
+            width= 200, height=200,
             fg_color=current_color,
-            corner_radius=15
+            corner_radius=config.DEFAULT_CORNER_RADIUS
         )
         self.pixel_preview.pack(side="left", padx=(0, 50))
 
@@ -94,11 +94,11 @@ class DetailView(ctk.CTkFrame):
                 master=mood_grid_frame,
                 width=80, height=30,
                 fg_color=color,
-                hover_color=color,
+                hover_color=config.lighten_color(color, amount=config.DEFAULT_BRITHNESS_AMOUNT),
                 text=mood,
                 text_color="black",
-                font=(config.APP_FONT, 12, "bold"),
-                corner_radius=20,
+                font=(config.APP_FONT, 15, "bold"),
+                corner_radius=config.DEFAULT_CORNER_RADIUS,
                 command=lambda c=color: self.on_mood_select_callback(c, self.clicked_date)
             )
             mood_button.grid(row=row, column=col, padx=5, pady=5)
@@ -115,13 +115,7 @@ class DetailView(ctk.CTkFrame):
             hover_color="#777777",
             text="+",
             font=(config.APP_FONT, 18, "bold"),
-            corner_radius=50,
+            corner_radius=config.DEFAULT_CORNER_RADIUS,
             command=lambda: self.on_add_mood_callback(self.clicked_date)
         )
-        add_mood_btn.grid(row=add_row, column=add_col, padx=5, pady=5)
-
-
-
-
-
-
+        add_mood_btn.grid(row=add_row, column=add_col, padx=10, pady=5)

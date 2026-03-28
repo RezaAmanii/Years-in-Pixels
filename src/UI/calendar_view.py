@@ -68,16 +68,21 @@ class CalendarView(ctk.CTkFrame):
 
                 color = self.user_entries.get(stringed_date, config.DEFAULT_BOX_COLOR)
 
+                if color == config.DEFAULT_BOX_COLOR:
+                    hover = config.DEFAULT_HOVER_PIXEL_COLOR
+                else:
+                    hover = config.lighten_color(color, amount=config.DEFAULT_BRITHNESS_AMOUNT)
+
                 # Squares (days in a year)
                 button = ctk.CTkButton(
                     master=self,
                     width=16,
                     height=16,
                     fg_color=color,
-                    hover_color=config.DEFAULT_HOVER_PIXEL_COLOR,
+                    hover_color=hover,
                     border_width=0,
                     text="",
-                    corner_radius=2,
+                    corner_radius=config.DEFAULT_CORNER_RADIUS - 3,
                     command=lambda d=current_date: self.on_pixel_click_callback(d),
                 )
                 self.pixel_buttons[current_date] = button
@@ -88,7 +93,12 @@ class CalendarView(ctk.CTkFrame):
     def update_pixel_color(self, clicked_date: date, color: str):
         if clicked_date in self.pixel_buttons:
             button = self.pixel_buttons[clicked_date]
-            button.configure(fg_color=color, hover_color=color)
+
+            if color == config.DEFAULT_BOX_COLOR:
+                hover = config.DEFAULT_HOVER_PIXEL_COLOR
+            else:
+                hover = config.lighten_color(color, amount=config.DEFAULT_BRITHNESS_AMOUNT)
+            button.configure(fg_color=color, hover_color=hover)
 
 
 
