@@ -25,14 +25,14 @@ class MainController(ctk.CTk):
         # Load Icons to pass to views
         self.icons = {
             'back': ctk.CTkImage(
-                light_image=Image.open("Icons/back_button_light.png"),
-                dark_image=Image.open("Icons/back_button_dark.png"),
-                size=(20, 20)
+                light_image=Image.open("Icons/back_button_dark.png"),
+                dark_image=Image.open("Icons/back_button_light.png"),
+                size=(30, 30)
             ),
 
             'clear': ctk.CTkImage(
-                light_image=Image.open("Icons/clear.png"),
-                dark_image=Image.open("Icons/clear.png"),
+                light_image=Image.open("Icons/clear_dark.png"),
+                dark_image=Image.open("Icons/clear_light.png"),
                 size=(30, 30)
             )
         }
