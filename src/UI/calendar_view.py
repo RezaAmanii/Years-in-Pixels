@@ -4,14 +4,18 @@ from src import config
 
 
 class CalendarView(ctk.CTkFrame):
-    def __init__(self, master, user_entries, on_pixel_click_callback, **kwargs):
+    def __init__(self, master, user_entries, color_palette, on_pixel_click_callback, **kwargs):
         super().__init__(master, fg_color=config.DEFAULT_BACKGROUND_DARK, **kwargs)
         self.user_entries = user_entries
+        self.color_palette = color_palette
         self.on_pixel_click_callback = on_pixel_click_callback
         self.pixel_buttons = {}
 
         self.create_day_labels()
         self.create_pixel_grid()
+
+        self.create_stats_section()
+        self.update_stats()
 
 
     def create_day_labels(self):
@@ -101,4 +105,65 @@ class CalendarView(ctk.CTkFrame):
             button.configure(fg_color=color, hover_color=hover)
 
 
+    def create_stats_section(self):
+        # Separator
+        separator = ctk.CTkFrame(
+            master=self,
+            height=2,
+            fg_color="#333333"
+        )
+        separator.grid(row=8, column=0, columnspan=90, sticky="ew", pady=(15, 5), padx=10)
 
+        # Statistics Label
+        stats_title = ctk.CTkLabel(
+            master=self,
+            text="Statistics:",
+            font=(config.APP_FONT, 13, "bold"),
+            text_color=config.DEFAULT_DAY_LABEL_FONT_COLOR
+        )
+        stats_title.grid(row=9, column=0, columnspan=2, sticky="w", padx=10)
+
+        # Container for the dynamic numbers
+        self.stats_container = ctk.CTkFrame(
+            master=self,
+            fg_color="transparent"
+        )
+        self.stats_container.grid(row=9, column=2, columnspan=88, sticky="w", padx=10)
+
+    def update_stats(self):
+        for child in self.stats_container.winfo_children():
+            child.destroy()
+
+        mood_counts = {}
+        for entry in self.user_entries.values():
+            if entry in self.color_palette:
+                mood_counts[entry] = mood_counts.get(entry, 0) + 1
+
+            else:
+                for m, c in self.color_palette.items():
+                    if c == entry:
+                        mood_counts[m] = mood_counts.get(m, 0) + 1
+                        break
+
+        col_index = 0
+        for mood, color in self.color_palette.items():
+            count = mood_counts.get(mood, 0)
+
+            if count > 0:
+
+                color_box = ctk.CTkFrame(
+                    master=self.stats_container,
+                    width=16, height=16,
+                    fg_color=color,
+                    corner_radius=config.DEFAULT_CORNER_RADIUS
+                )
+                color_box.grid(row=0, column=col_index, padx=(0, 6), pady=2)
+
+                stat_label = ctk.CTkLabel(
+                    master=self.stats_container,
+                    text=f"{mood}: {count}",
+                    font=(config.APP_FONT, 14, "bold"),
+                    text_color="white"
+                )
+                stat_label.grid(row=0, column=col_index + 1, padx=(0, 25), pady=2)
+                col_index += 2

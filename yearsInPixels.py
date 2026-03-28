@@ -11,7 +11,6 @@ class MainController(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-
         self.geometry(config.APP_WINDOW_SIZE)
         self.title(config.APP_TITLE)
         self.resizable(False, False)
@@ -43,6 +42,7 @@ class MainController(ctk.CTk):
         self.calendar_view = CalendarView(
             master=self,
             user_entries=self.user_data["entries"],
+            color_palette=self.user_data["palette"],
             on_pixel_click_callback=self.show_detail_view
         )
         self.calendar_view.pack(fill="both", expand=True)
@@ -84,6 +84,8 @@ class MainController(ctk.CTk):
 
         # Update views
         self.calendar_view.update_pixel_color(clicked_date, color)
+        self.calendar_view.update_stats()
+
         if self.detail_view is not None:
             self.detail_view.pixel_preview.configure(fg_color=color)
 
@@ -97,6 +99,7 @@ class MainController(ctk.CTk):
 
         # Update views
         self.calendar_view.update_pixel_color(clicked_date, config.DEFAULT_BOX_COLOR)
+        self.calendar_view.update_stats()
         self.show_detail_view(clicked_date)
 
 
@@ -120,6 +123,8 @@ class MainController(ctk.CTk):
     def handle_delete_mood(self, mood_name: str, clicked_date: date):
         self.user_data["palette"].pop(mood_name, None)
         self.dataManager.update_users_data(self.user_data)
+
+        self.calendar_view.update_stats()
         self.show_detail_view(clicked_date)
 
 if __name__ == "__main__":
