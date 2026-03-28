@@ -1,0 +1,94 @@
+import customtkinter as ctk
+from datetime import date, timedelta
+from src import config
+
+
+class CalendarView(ctk.CTkFrame):
+    def __init__(self, master, user_entries, on_pixel_click_callback, **kwargs):
+        super().__init__(master, fg_color=config.DEFAULT_BACKGROUND_DARK, **kwargs)
+        self.user_entries = user_entries
+        self.on_pixel_click_callback = on_pixel_click_callback
+        self.pixel_buttons = {}
+
+        self.create_day_labels()
+        self.create_pixel_grid()
+
+
+    def create_day_labels(self):
+        for i in range(config.TOTAL_DAYS_IN_WEEK):
+            day_label = ctk.CTkLabel(
+                master=self,
+                text=config.DAYS_OF_WEEK[i + 1],
+                font=(config.APP_FONT, 13, "bold"),
+                text_color=config.DEFAULT_DAY_LABEL_FONT_COLOR,
+                padx=10
+            )
+            day_label.grid(row=i + 1, column=0)
+
+
+    def create_month_labels(self, current_date: date, week, month_gap_offset):
+        month_label = ctk.CTkLabel(
+            master=self,
+            text=config.MONTHS_OF_YEAR[current_date.month],
+            font=(config.APP_FONT, 15, "bold"),
+            text_color=config.DEFAULT_MONTH_LABEL_FONT_COLOR,
+            pady=5
+        )
+        month_label.grid(row=0, column=week + month_gap_offset, columnspan=4, sticky="w")
+
+
+
+    def create_pixel_grid(self):
+        start_of_year = date(date.today().year, 1, 1)
+        start_of_next_year = date(date.today().year + 1, 1, 1)
+        delta = start_of_next_year - start_of_year
+        days = (start_of_next_year - start_of_year).days
+
+        month_gap_offset = 0
+        days_passed = 0
+
+        for day in range(days):
+            delta = timedelta(days=day)
+            current_date = start_of_year + delta
+            row = current_date.weekday() + 1
+            stringed_date = config.string_the_date(current_date)
+
+            # Finding number of week
+            week = int(current_date.strftime("%V"))
+
+            # Check if we are in the same year as current year
+            if current_date.year == start_of_year.year:
+                # Check if it is start of month
+                if current_date.day == 1:
+                    month_gap_offset += 3
+                    self.grid_columnconfigure(week + month_gap_offset - 1, minsize=20)
+
+                    # Month Lables (In the first row)
+                    self.create_month_labels(current_date, week, month_gap_offset)
+
+                color = self.user_entries.get(stringed_date, config.DEFAULT_BOX_COLOR)
+
+                # Squares (days in a year)
+                button = ctk.CTkButton(
+                    master=self,
+                    width=16,
+                    height=16,
+                    fg_color=color,
+                    hover_color=config.DEFAULT_HOVER_PIXEL_COLOR,
+                    border_width=0,
+                    text="",
+                    corner_radius=2,
+                    command=lambda d=current_date: self.on_pixel_click_callback(d),
+                )
+                self.pixel_buttons[current_date] = button
+                button.grid(row=row, column=week + month_gap_offset, padx=2, pady=2)
+
+            days_passed += 1
+
+    def update_pixel_color(self, clicked_date: date, color: str):
+        if clicked_date in self.pixel_buttons:
+            button = self.pixel_buttons[clicked_date]
+            button.configure(fg_color=color, hover_color=color)
+
+
+

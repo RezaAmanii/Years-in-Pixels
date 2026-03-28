@@ -1,1 +1,10 @@
-{"palette": {"Happy": "#50fa7b", "Tired": "#f1fa8c", "Sad": "#ff5555"}, "entries": {}}
+{
+    "palette": {
+        "Happy": "#50fa7b",
+        "Tired": "#f1fa8c",
+        "Sad": "#ff5555"
+    },
+    "entries": {
+        "2026-01-05": "#50fa7b"
+    }
+}
