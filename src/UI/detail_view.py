@@ -1,12 +1,13 @@
 import customtkinter as ctk
+import tkinter.messagebox as messagebox
 from datetime import date
 from src import config
 
 
 class DetailView(ctk.CTkFrame):
     def __init__(self, master, clicked_date: date, user_entries: dict, color_palette: dict,
-                 icons: dict, on_back_callback, on_clear_callback, on_mood_select_callback, 
-                 on_add_mood_callback, **kwargs):
+                 icons: dict, on_back_callback, on_clear_callback, on_mood_select_callback,
+                 on_add_mood_callback, on_delete_mood_callback, **kwargs):
         super().__init__(master, fg_color=config.DEFAULT_BACKGROUND_DARK, **kwargs)
 
         self.clicked_date = clicked_date
@@ -21,6 +22,7 @@ class DetailView(ctk.CTkFrame):
         self.on_clear_callback = on_clear_callback
         self.on_mood_select_callback = on_mood_select_callback
         self.on_add_mood_callback = on_add_mood_callback
+        self.on_delete_mood_callback = on_delete_mood_callback
 
         self.build_ui()
 
@@ -102,6 +104,20 @@ class DetailView(ctk.CTkFrame):
                 command=lambda c=color: self.on_mood_select_callback(c, self.clicked_date)
             )
             mood_button.grid(row=row, column=col, padx=5, pady=5)
+
+            def right_click_delete(event, m=mood):
+                confirm = messagebox.askyesno(
+                    title="Delete Mood",
+                    message=f"Are you sure you want to delete the '{m}' mood\n\n(This won't remove colors already on your calendar.)"
+                )
+                if confirm:
+                    self.on_delete_mood_callback(m, self.clicked_date)
+
+            # Bind right-click to the button
+            # <Button-3> handle Windows & Linux
+            mood_button.bind("<Button-3>", right_click_delete)
+            # <Button-2> handle Mac
+            mood_button.bind("<Button-2>", right_click_delete)
 
 
         # Add Mood Button

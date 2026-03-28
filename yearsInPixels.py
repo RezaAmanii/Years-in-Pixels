@@ -63,7 +63,8 @@ class MainController(ctk.CTk):
             on_back_callback=self.show_calendar_view,
             on_clear_callback=self.handle_clear_mood,
             on_mood_select_callback=self.handle_mood_select,
-            on_add_mood_callback=self.handle_add_mood
+            on_add_mood_callback=self.handle_add_mood,
+            on_delete_mood_callback=self.handle_delete_mood
         )
         self.detail_view.pack(expand=True, fill="both")
 
@@ -115,7 +116,11 @@ class MainController(ctk.CTk):
                 # Refreshing DetailView to show the new button
                 self.show_detail_view(clicked_date)
 
-
+    
+    def handle_delete_mood(self, mood_name: str, clicked_date: date):
+        self.user_data["palette"].pop(mood_name, None)
+        self.dataManager.update_users_data(self.user_data)
+        self.show_detail_view(clicked_date)
 
 if __name__ == "__main__":
     app = MainController()
