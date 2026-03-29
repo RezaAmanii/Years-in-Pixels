@@ -11,10 +11,8 @@ A minimal, desktop-based activity tracking application built with Python and `cu
 **Years in Pixels** allows you to visualize your entire year in a single, colorful grid like a GitHub contribution graph, giving you a beautiful and minimalistic view of your daily activity over time.
 
 
-<p float="left">
-  <img src="screenshots/app_calendarView.png" width="48%" />
-  <img src="screenshots/app_detailView.png" width="48%" />
-</p>
+![Year in Pixels Screenshot](screenshots/app_calendarView.png)
+![Year in Pixels Screenshot](screenshots/app_detailView.png)
 
 ## Features
 
